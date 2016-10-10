@@ -35,15 +35,24 @@ node['openvswitch']['sourcefolders'].each do |path|
     action :create
   end
 end
+
 #
-# remote_file '/home/ovs/rpmbuild/SOURCES/openvswitch-2.5.0.tar.gz' do
-#   source 'http://openvswitch.org/releases/openvswitch-2.5.0.tar.gz'
-#   owner 'ovs'
-#   group 'ovs'
-#   mode '0755'
-#   action :create
-#   not_if do ::File.exists?('/home/ovs/rpmbuild/SOURCES/openvswitch-2.5.0.tar.gz') end
-# end
+# Setup download location - tricky as using indexed array :/
+#
+node.default['openvswitch']['download2'] = "#{node['openvswitch']['user']['home']}/#{node['openvswitch']['sourcefolders'][1]}"
+node.default['openvswitch']['filename'] = "openvswitch-#{node['openvswitch']['version']}.tar.gz"
+
+# Download remote file ( unless we already have it)
+# Might require more rework as we only check whatever file presence
+remote_file "#{node['openvswitch']['download2']}/#{node['openvswitch']['filename']}" do
+  source "http://openvswitch.org/releases/#{node['openvswitch']['filename']}"
+  owner "#{node['openvswitch']['user']['name']}"
+  group "#{node['openvswitch']['user']['name']}"
+  mode '0755'
+  action :create
+  not_if do ::File.exists?("#{node['openvswitch']['download2']}/#{node['openvswitch']['filename']}") end
+end
+
 #
 # execute 'Extract OVS sources' do
 #   command 'tar xzvf openvswitch-2.5.0.tar.gz'
