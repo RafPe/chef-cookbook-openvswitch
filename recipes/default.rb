@@ -66,7 +66,7 @@ end
 execute 'Build packages' do
     user 'root'
     action :run
-    command "sudo su - ovs -l -c 'cd #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}/ && rpmbuild -bb --nocheck #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}/rhel/openvswitch-fedora.spec'"
+    command "sudo su - ovs -l -c 'cd #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['version']}/ && rpmbuild -bb --nocheck #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['version']}/rhel/openvswitch-fedora.spec'"
     not_if do ::File.exists?("#{node['openvswitch']['folder']['RPMS']}/x86_64/openvswitch-#{node['openvswitch']['version']}-1.el7.centos.x86_64.rpm") end
 end
 
