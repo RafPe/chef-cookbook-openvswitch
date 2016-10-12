@@ -9,7 +9,7 @@
 
 # Packages for openvswitch
 %w(wget openssl-devel desktop-file-utils gcc make python-devel openssl-devel kernel-devel graphviz kernel-debug-devel autoconf automake rpm-build redhat-rpm-config libtool python-twisted-core python-zope-interface PyQt4
-libcap-ng-devel groff checkpolicy selinux-policy-devel).each do |pkg|
+libcap-ng-devel groff checkpolicy selinux-policy-devel python-six).each do |pkg|
   package pkg do
     action :install
   end
@@ -39,33 +39,38 @@ end
 #
 # Setup download location - tricky as using indexed array :/
 #
-node.default['openvswitch']['download2'] = "#{node['openvswitch']['user']['home']}/#{node['openvswitch']['sourcefolders'][1]}"
-node.default['openvswitch']['filename'] = "openvswitch-#{node['openvswitch']['version']}.tar.gz"
+node.default['openvswitch']['filename']           = "openvswitch-#{node['openvswitch']['version']}.tar.gz"
+node.default['openvswitch']['folder']['rpmbuild'] = "#{node['openvswitch']['user']['home']}/#{node['openvswitch']['sourcefolders'][0]}"
+node.default['openvswitch']['folder']['SOURCES']  = "#{node['openvswitch']['user']['home']}/#{node['openvswitch']['sourcefolders'][1]}"
+node.default['openvswitch']['folder']['RPMS']     = "#{node['openvswitch']['user']['home']}/#{node['openvswitch']['sourcefolders'][0]}/RPMS"
+
 
 # Download remote file ( unless we already have it)
 # Might require more rework as we only check whatever file presence
-remote_file "#{node['openvswitch']['download2']}/#{node['openvswitch']['filename']}" do
+remote_file "#{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}" do
   source "http://openvswitch.org/releases/#{node['openvswitch']['filename']}"
   owner "#{node['openvswitch']['user']['name']}"
   group "#{node['openvswitch']['user']['name']}"
   mode '0755'
   action :create
-  not_if do ::File.exists?("#{node['openvswitch']['download2']}/#{node['openvswitch']['filename']}") end
+  not_if do ::File.exists?("#{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}") end
 end
 
 #
-# execute 'Extract OVS sources' do
-#   command 'tar xzvf openvswitch-2.5.0.tar.gz'
-#   cwd '/home/ovs/rpmbuild/SOURCES/'
-# end
+execute 'Extract OVS sources' do
+  command "tar xzvf #{node['openvswitch']['filename']}"
+  cwd "#{node['openvswitch']['folder']['SOURCES']}"
+end
+
 #
-# execute 'Build packages' do
-#     user 'root'
-#     action :run
-#     command "sudo su - ovs -l -c 'cd /home/ovs/rpmbuild/SOURCES/openvswitch-2.5.0/ && rpmbuild -bb --nocheck /home/ovs/rpmbuild/SOURCES/openvswitch-2.5.0/rhel/openvswitch-fedora.spec'"
-#     not_if do ::File.exists?('/home/ovs/rpmbuild/RPMS/x86_64/openvswitch-2.5.0-1.el7.centos.x86_64.rpm') end
-# end
-#
+execute 'Build packages' do
+    user 'root'
+    action :run
+    command "sudo su - ovs -l -c 'cd #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}/ && rpmbuild -bb --nocheck #{node['openvswitch']['folder']['SOURCES']}/#{node['openvswitch']['filename']}/rhel/openvswitch-fedora.spec'"
+    not_if do ::File.exists?("#{node['openvswitch']['folder']['RPMS']}/x86_64/openvswitch-#{node['openvswitch']['version']}-1.el7.centos.x86_64.rpm") end
+end
+
+
 # rpm_package '/home/ovs/rpmbuild/RPMS/x86_64/openvswitch-2.5.0-1.el7.centos.x86_64.rpm' do
 #   action :install
 # end
