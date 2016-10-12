@@ -71,11 +71,11 @@ execute 'Build packages' do
 end
 
 
-# rpm_package '/home/ovs/rpmbuild/RPMS/x86_64/openvswitch-2.5.0-1.el7.centos.x86_64.rpm' do
-#   action :install
-# end
-#
-# # Ensure the service is properly started
-# service 'openvswitch.service' do
-#   action [ :enable, :start ]
-# end
+rpm_package "#{node['openvswitch']['folder']['RPMS'] }/x86_64/openvswitch-#{node['openvswitch']['version']}-1.el7.centos.x86_64.rpm" do
+  action :install
+end
+
+# Ensure the service is properly started
+service 'openvswitch.service' do
+  action [ :enable, :start ]
+end
